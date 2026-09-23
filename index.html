@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="si">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Salary Clock — Attendance & Salary</title>
+<style>
+:root{
+  --bg:#090b10;--panel:#11151d;--panel2:#171c25;--line:#2a303b;
+  --text:#f5f7fa;--muted:#9aa4b2;--red:#ef233c;--green:#21c77a;
+  --amber:#f4b740;--blue:#4da3ff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+button,input,select{font:inherit}
+.app{max-width:1100px;margin:auto;padding:18px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.brand h1{margin:0;font-size:24px}.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.clock{font-size:25px;font-weight:700;text-align:right}.date{font-size:12px;color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.label{color:var(--muted);font-size:12px}.value{font-size:25px;font-weight:700;margin-top:7px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+.action{border:0;border-radius:18px;padding:22px 12px;color:white;font-weight:800;font-size:23px;cursor:pointer}
+.in{background:#087f4e}.out{background:#b71930}.action:disabled{opacity:.35;cursor:not-allowed}
+.status{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin-bottom:16px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:8px}.dot.on{background:var(--green)}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:15px 0}
+.toolbar select,.toolbar input,.settings input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 11px}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:9px 13px;border-radius:10px;cursor:pointer}
+.btn.danger{color:#ff8a98}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px}
+.panel h2{font-size:17px;margin:0 0 12px}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:820px}
+th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
+th{color:var(--muted);font-weight:600}
+.good{color:var(--green)}.warn{color:var(--amber)}.bad{color:#ff7080}
+.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.summary .mini{background:var(--panel2);border-radius:12px;padding:12px}
+.mini b{display:block;font-size:18px;margin-top:4px}
+.settings{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.settings label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}
+.settings input{width:100%}
+.note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:12px}
+@media(max-width:760px){
+ .app{padding:12px}.cards{grid-template-columns:repeat(2,1fr)}
+ .summary{grid-template-columns:repeat(2,1fr)}.settings{grid-template-columns:1fr 1fr}
+ .clock{font-size:20px}.brand h1{font-size:20px}
+}
+@media(max-width:450px){.settings{grid-template-columns:1fr}.actions{gap:10px}.action{font-size:20px;padding:20px 8px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">
+    <h1>Salary Clock</h1>
+    <p>IN / OUT Attendance + Monthly Salary Calculator • 🇮🇱 Israel Time</p>
+  </div>
+  <div><div class="clock" id="clock">--:--:--</div><div class="date" id="today"></div></div>
+</header>
+
+<div class="cards">
+  <div class="card"><div class="label">මෙම මාසයේ වැඩ කළ පැය</div><div class="value" id="mHours">0.00</div></div>
+  <div class="card"><div class="label">125% OT පැය</div><div class="value" id="ot125">0.00</div></div>
+  <div class="card"><div class="label">150% OT පැය</div><div class="value" id="ot150">0.00</div></div>
+  <div class="card"><div class="label">ඇස්තමේන්තු වැටුප</div><div class="value" id="salary">0.00</div></div>
+</div>
+
+<div class="actions">
+  <button class="action in" id="inBtn" onclick="clockIn()">▶ IN — වැඩට පැමිණි වෙලාව</button>
+  <button class="action out" id="outBtn" onclick="clockOut()">■ OUT — වැඩ අවසන්</button>
+</div>
+
+<div class="status"><span class="dot" id="dot"></span><span id="statusText">අද තවම IN කරලා නැහැ.</span></div>
+
+<div class="panel">
+  <h2>මාසික සාරාංශය</h2>
+  <div class="summary">
+    <div class="mini"><span class="label">Base Salary</span><b id="baseOut">6,443.85</b></div>
+    <div class="mini"><span class="label">Hourly Rate</span><b id="rateOut">35.41</b></div>
+    <div class="mini"><span class="label">සාමාන්‍ය පැය</span><b id="regularOut">0.00</b></div>
+    <div class="mini"><span class="label">125% ගෙවීම</span><b id="pay125">0.00</b></div>
+    <div class="mini"><span class="label">150% ගෙවීම</span><b id="pay150">0.00</b></div>
+    <div class="mini"><span class="label">Gross Estimate</span><b id="gross">6,443.85</b></div>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>Attendance — <span id="monthTitle"></span></h2>
+  <div class="toolbar">
+    <input type="month" id="monthPicker" onchange="render()">
+    <button class="btn" onclick="exportCSV()">CSV Export</button>
+    <button class="btn danger" onclick="clearAll()">සියලු data මකන්න</button>
+  </div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>දිනය</th><th>Day</th><th>IN</th><th>OUT</th><th>Break</th><th>Paid Hours</th><th>Regular</th><th>125%</th><th>150%</th><th>Day Pay</th><th>Action</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  </div>
+</div>
+
+
+<div class="panel">
+  <h2>✍️ Manual IN / OUT Entry</h2>
+  <div class="toolbar">
+    <input type="date" id="manualDate">
+    <input type="time" id="manualIn" aria-label="IN time">
+    <input type="time" id="manualOut" aria-label="OUT time">
+    <button class="btn" onclick="manualSave()">Save IN / OUT</button>
+  </div>
+  <div class="note">අමතක වූ දවසක Date + IN + OUT වෙලාව මෙතනින් manually දාන්න. කලින් record එකක් තිබුණොත් එය update වේ. Time එක Israel (Asia/Jerusalem) ලෙස ගණනය වේ.</div>
+</div>
+
+<div class="panel">
+  <h2>Salary Settings</h2>
+  <div class="settings">
+    <div><label>මාසික මූලික වැටුප</label><input id="base" type="number" step="0.01" value="6443.85"></div>
+    <div><label>මාසික සාමාන්‍ය පැය</label><input id="stdHours" type="number" step="0.01" value="182"></div>
+    <div><label>කෑම විවේකය (පැය)</label><input id="breakHours" type="number" step="0.05" value="0.50"></div>
+    <div><label>125% OT multiplier</label><input id="mult125" type="number" step="0.01" value="1.25"></div>
+    <div><label>150% OT multiplier</label><input id="mult150" type="number" step="0.01" value="1.50"></div>
+    <div><label>දිනකට සාමාන්‍ය පැය</label><input id="dailyHours" type="number" step="0.25" value="7"></div>
+  </div>
+  <div class="note">
+    මේ default values 2026/06–08 salary sheets තුනේ පෙනෙන අගයන් අනුව සකස් කරලා තියෙනවා:
+    base 6,443.85, monthly standard 182h, hourly ≈ 35.41, 125%=44.26, 150%=53.11.
+    Saturday/weekly-rest day එකේ පැය 150% ලෙස default කර ඇත. මෙය payroll rule එකක් ලෙස settings වලින් පසුව වෙනස් කළ හැක.
+    <br><br>
+    <b>වැදගත්:</b> මෙය attendance/gross-salary calculator එකක්. Tax, pension, insurance වැනි payroll deductions වෙනම rules ලෙස add කළ යුතුයි.
+  </div>
+</div>
+</div>
+
+<script>
+const KEY='salary_clock_v1';
+let data=JSON.parse(localStorage.getItem(KEY)||'{"records":{},"settings":{}}');
+
+const el=id=>document.getElementById(id);
+function settings(){
+  return {
+    base:+el('base').value||6443.85,
+    stdHours:+el('stdHours').value||182,
+    breakHours:+el('breakHours').value||0.5,
+    mult125:+el('mult125').value||1.25,
+    mult150:+el('mult150').value||1.5,
+    dailyHours:+el('dailyHours').value||7
+  };
+}
+function save(){data.settings=settings();localStorage.setItem(KEY,JSON.stringify(data))}
+function pad(n){return String(n).padStart(2,'0')}
+function key(d){return d.toISOString().slice(0,10)}
+function localNow(){
+  const d=new Date(); return d;
+}
+function hm(d){return pad(d.getHours())+':'+pad(d.getMinutes())}
+function todayKey(){let d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function hoursBetween(a,b){return Math.max(0,(new Date(b)-new Date(a))/3600000)}
+function calc(r){
+  const s=settings();
+  if(!r.in||!r.out) return {paid:0,regular:0,ot125:0,ot150:0,pay:0};
+  let raw=hoursBetween(r.in,r.out);
+  let paid=Math.max(0,raw-s.breakHours);
+  let day=new Date(r.in);
+  let sat=day.getDay()===6;
+  let regular=0,ot125=0,ot150=0;
+  if(sat){
+    ot150=paid;
+  }else{
+    regular=Math.min(paid,s.dailyHours);
+    let ot=Math.max(0,paid-s.dailyHours);
+    ot125=Math.min(ot,2);
+    ot150=Math.max(0,ot-2);
+  }
+  const rate=s.base/s.stdHours;
+  const pay=s.base/s.stdHours*regular + rate*s.mult125*ot125 + rate*s.mult150*ot150;
+  return {raw,paid,regular,ot125,ot150,pay};
+}
+function clockIn(){
+  const k=todayKey();
+  if(data.records[k]?.in) return;
+  data.records[k]={in:new Date().toISOString(),out:null};
+  save();render();
+}
+function clockOut(){
+  const k=todayKey();
+  if(!data.records[k]?.in) return alert('මුලින් IN කරන්න.');
+  if(data.records[k].out) return;
+  data.records[k].out=new Date().toISOString();
+  save();render();
+}
+function fmt(n){return (n||0).toFixed(2)}
+function money(n){return (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function render(){
+  const s=settings();
+  el('baseOut').textContent=money(s.base);
+  el('rateOut').textContent=money(s.base/s.stdHours);
+  const now=new Date();
+  el('clock').textContent=now.toLocaleTimeString('en-GB');
+  el('today').textContent=now.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const mp=el('monthPicker');
+  if(!mp.value) mp.value=now.getFullYear()+'-'+pad(now.getMonth()+1);
+  const month=mp.value;
+  el('monthTitle').textContent=month;
+  let total={paid:0,regular:0,ot125:0,ot150:0,pay:0};
+  const rows=[];
+  Object.entries(data.records).filter(([k])=>k.startsWith(month+'-')).sort().reverse().forEach(([k,r])=>{
+    const c=calc(r);Object.keys(total).forEach(x=>total[x]+=c[x]||0);
+    const d=new Date(k+'T00:00:00');
+    const day=d.toLocaleDateString('en-US',{weekday:'short'});
+    rows.push(`<tr>
+      <td>${k}</td><td>${day}${d.getDay()===6?' • Rest day':''}</td>
+      <td>${r.in?new Date(r.in).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—'}</td>
+      <td>${r.out?new Date(r.out).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—'}</td>
+      <td>${r.out?fmt(s.breakHours)+' h':'—'}</td>
+      <td>${fmt(c.paid)}</td><td>${fmt(c.regular)}</td><td>${fmt(c.ot125)}</td><td>${fmt(c.ot150)}</td><td>${money(c.pay)}</td>
+      <td><button class="btn" onclick="editManual('${k}')">Edit</button></td>
+    </tr>`);
+  });
+  el('rows').innerHTML=rows.join('')||'<tr><td colspan="11">මෙම මාසයට attendance records නැහැ.</td></tr>';
+  el('mHours').textContent=fmt(total.paid);
+  el('ot125').textContent=fmt(total.ot125);
+  el('ot150').textContent=fmt(total.ot150);
+  el('regularOut').textContent=fmt(total.regular);
+  el('pay125').textContent=money(total.ot125*(s.base/s.stdHours)*s.mult125);
+  el('pay150').textContent=money(total.ot150*(s.base/s.stdHours)*s.mult150);
+  el('gross').textContent=money(s.base + total.ot125*(s.base/s.stdHours)*s.mult125 + total.ot150*(s.base/s.stdHours)*s.mult150);
+  el('salary').textContent=money(s.base + total.ot125*(s.base/s.stdHours)*s.mult125 + total.ot150*(s.base/s.stdHours)*s.mult150);
+  const r=data.records[todayKey()];
+  el('inBtn').disabled=!!r?.in;
+  el('outBtn').disabled=!r?.in||!!r?.out;
+  if(r?.in&&!r?.out){el('dot').className='dot on';el('statusText').textContent='දැන් වැඩ කරනවා — IN '+new Date(r.in).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+  else if(r?.out){el('dot').className='dot';el('statusText').textContent='අද OUT කරලා තියෙනවා — '+new Date(r.out).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+  else {el('dot').className='dot';el('statusText').textContent='අද තවම IN කරලා නැහැ.';}
+}
+
+function localIsraelDateTime(dateStr,timeStr){
+  const [y,mo,da]=dateStr.split('-').map(Number);
+  const [hh,mi]=timeStr.split(':').map(Number);
+  const probe=new Date(Date.UTC(y,mo-1,da,hh,mi));
+  const parts=new Intl.DateTimeFormat('en-US',{
+    timeZone:'Asia/Jerusalem',timeZoneName:'longOffset',
+    year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+  }).formatToParts(probe);
+  const z=(parts.find(x=>x.type==='timeZoneName')||{}).value||'GMT+03:00';
+  const m=z.match(/GMT([+-])(\d{2}):(\d{2})/);
+  const off=m?(Number(m[2])*60+Number(m[3]))*(m[1]==='-'?-1:1):120;
+  return new Date(Date.UTC(y,mo-1,da,hh,mi)-off*60000);
+}
+function manualSave(){
+  const d=document.getElementById('manualDate').value;
+  const inn=document.getElementById('manualIn').value;
+  const out=document.getElementById('manualOut').value;
+  if(!d||!inn||!out){alert('Date, IN සහ OUT වෙලාවන් තුනම දාන්න.');return;}
+  const i=localIsraelDateTime(d,inn);
+  let o=localIsraelDateTime(d,out);
+  if(o<=i)o=new Date(o.getTime()+86400000);
+  data.records[d]={in:i.toISOString(),out:o.toISOString()};
+  save(); render();
+  alert('Manual IN / OUT saved.');
+}
+function editManual(k){
+  const r=data.records[k];
+  if(!r)return;
+  document.getElementById('manualDate').value=k;
+  document.getElementById('manualIn').value=new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  document.getElementById('manualOut').value=new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  document.getElementById('manualDate').scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function exportCSV(){
+  const mp=el('monthPicker').value;
+  const s=settings();
+  let lines=[['Date','Day','IN','OUT','BreakHours','PaidHours','Regular','OT125','OT150','DayPay'].join(',')];
+  Object.entries(data.records).filter(([k])=>k.startsWith(mp+'-')).sort().forEach(([k,r])=>{
+    const c=calc(r);let d=new Date(k+'T00:00:00');
+    lines.push([k,d.toLocaleDateString('en-US',{weekday:'short'}),r.in?new Date(r.in).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'',r.out?new Date(r.out).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'',r.out?s.breakHours:'',fmt(c.paid),fmt(c.regular),fmt(c.ot125),fmt(c.ot150),fmt(c.pay)].join(','));
+  });
+  const blob=new Blob([lines.join('\\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='salary_'+mp+'.csv';a.click();
+}
+function clearAll(){
+  if(confirm('Attendance data සියල්ල මකන්නද?')){data.records={};save();render();}
+}
+['base','stdHours','breakHours','mult125','mult150','dailyHours'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
+setInterval(render,1000);
+render();
+</script>
+</body>
+</html>
