@@ -8,10 +8,11 @@
 :root{
   --bg:#090b10;--panel:#11151d;--panel2:#171c25;--line:#2a303b;
   --text:#f5f7fa;--muted:#9aa4b2;--red:#ef233c;--green:#21c77a;
-  --amber:#f4b740;--blue:#4da3ff;
+  --amber:#f4b740;--blue:#4da3ff;--orange:#ff9f43;--cardGlow:rgba(239,35,60,.12);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+body{padding-bottom:env(safe-area-inset-bottom)}
 button,input,select{font:inherit}
 .app{max-width:1100px;margin:auto;padding:18px}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
@@ -20,10 +21,10 @@ header{display:flex;justify-content:space-between;align-items:center;gap:12px;ma
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
 .label{color:var(--muted);font-size:12px}.value{font-size:25px;font-weight:700;margin-top:7px}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
-.action{border:0;border-radius:18px;padding:22px 12px;color:white;font-weight:800;font-size:23px;cursor:pointer}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0;position:sticky;top:8px;z-index:10}
+.action{border:0;border-radius:20px;padding:22px 12px;color:white;font-weight:800;font-size:23px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28);-webkit-tap-highlight-color:transparent}.action:active{transform:scale(.98)}
 .in{background:#087f4e}.out{background:#b71930}.action:disabled{opacity:.35;cursor:not-allowed}
-.status{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 15px;margin-bottom:16px}
+.status{background:linear-gradient(180deg,var(--panel),#0e1219);border:1px solid var(--line);border-radius:16px;padding:15px;margin-bottom:16px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--muted);margin-right:8px}.dot.on{background:var(--green)}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:15px 0}
 .toolbar select,.toolbar input,.settings input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:9px 11px}
@@ -36,7 +37,7 @@ table{width:100%;border-collapse:collapse;min-width:820px}
 th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
 th{color:var(--muted);font-weight:600}
 .good{color:var(--green)}.warn{color:var(--amber)}.bad{color:#ff7080}
-.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.balanceBox{border:1px solid var(--red);background:var(--cardGlow)}
 .summary .mini{background:var(--panel2);border-radius:12px;padding:12px}
 .mini b{display:block;font-size:18px;margin-top:4px}
 .settings{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -44,11 +45,47 @@ th{color:var(--muted);font-weight:600}
 .settings input{width:100%}
 .note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:12px}
 @media(max-width:760px){
- .app{padding:12px}.cards{grid-template-columns:repeat(2,1fr)}
+ .app{padding:10px 10px 24px}.cards{grid-template-columns:repeat(2,1fr);gap:8px}
+ .card{padding:13px;border-radius:15px}.value{font-size:21px}.panel{padding:13px;border-radius:16px}
+ .summary{grid-template-columns:repeat(2,1fr);gap:8px}.summary .mini{padding:11px}
+ .actions{gap:8px;top:4px}.action{font-size:18px;padding:20px 6px;min-height:70px}
+ .toolbar{gap:8px}.toolbar input,.toolbar select,.btn{min-height:44px;font-size:15px}
+ .brand h1{font-size:21px}.brand p{font-size:11px}.clock{font-size:18px}
+
  .summary{grid-template-columns:repeat(2,1fr)}.settings{grid-template-columns:1fr 1fr}
  .clock{font-size:20px}.brand h1{font-size:20px}
 }
-@media(max-width:450px){.settings{grid-template-columns:1fr}.actions{gap:10px}.action{font-size:20px;padding:20px 8px}}
+@media(max-width:450px){.settings{grid-template-columns:1fr}.actions{gap:8px}.action{font-size:17px;padding:18px 5px}.actions{grid-template-columns:1fr 1fr}.table-wrap{margin:0 -4px}.note{font-size:11px}}
+
+</style>
+
+<style>
+.liveTimerCard{
+  margin:10px 0 14px;
+  padding:16px;
+  border:1px solid #2c3746;
+  border-radius:18px;
+  background:linear-gradient(180deg,#151b24,#10151c);
+  text-align:center;
+  box-shadow:0 8px 24px #0004;
+}
+.liveLabel{font-size:12px;color:#aab4c2;margin-bottom:4px}
+#liveTimer{
+  font-size:42px;
+  line-height:1.05;
+  font-weight:850;
+  letter-spacing:2px;
+  font-variant-numeric:tabular-nums;
+  color:#f7f9fb;
+}
+.liveSub{font-size:10px;color:#778394;margin-top:6px}
+.action:disabled{opacity:.42!important;filter:none;cursor:not-allowed}
+@media(max-width:600px){
+  .liveTimerCard{padding:17px;margin:10px 0}
+  #liveTimer{font-size:40px}
+  .action{min-height:70px;border-radius:18px;touch-action:manipulation}
+  button,input,select{min-height:44px}
+}
 </style>
 </head>
 <body>
@@ -73,7 +110,12 @@ th{color:var(--muted);font-weight:600}
   <button class="action out" id="outBtn" onclick="clockOut()">■ OUT — වැඩ අවසන්</button>
 </div>
 
-<div class="status"><span class="dot" id="dot"></span><span id="statusText">අද තවම IN කරලා නැහැ.</span></div>
+<div class="status"><span class="dot" id="dot"></span><span id="statusText">අද තවම IN කරලා නැහැ.</span><div id="elapsed" style="font-size:28px;font-weight:800;margin-top:7px;letter-spacing:1px">00:00:00</div>
+<div class="liveTimerCard">
+  <div class="liveLabel">⏱️ අද වැඩ කළ කාලය</div>
+  <div id="liveTimer">00:00:00</div>
+  <div class="liveSub">IN කළ වෙලාවේ සිට live count වේ • 🇮🇱 Israel Time</div>
+</div><div style="font-size:11px;color:var(--muted)">වැඩ කළ ගතවූ කාලය • Israel Time</div></div>
 
 <div class="panel">
   <h2>මාසික සාරාංශය</h2>
@@ -84,6 +126,10 @@ th{color:var(--muted);font-weight:600}
     <div class="mini"><span class="label">125% ගෙවීම</span><b id="pay125">0.00</b></div>
     <div class="mini"><span class="label">150% ගෙවීම</span><b id="pay150">0.00</b></div>
     <div class="mini"><span class="label">Gross Estimate</span><b id="gross">6,443.85</b></div>
+    <div class="mini"><span class="label">Deductions</span><b id="dedTotal">0.00</b></div>
+    <div class="mini"><span class="label">After Deductions</span><b id="afterDed">6,443.85</b></div>
+    <div class="mini balanceBox"><span class="label">Opening Balance</span><b id="openingOut">0.00</b></div>
+    <div class="mini balanceBox"><span class="label">Closing Balance</span><b id="closing">6,443.85</b></div>
   </div>
 </div>
 
@@ -123,13 +169,18 @@ th{color:var(--muted);font-weight:600}
     <div><label>125% OT multiplier</label><input id="mult125" type="number" step="0.01" value="1.25"></div>
     <div><label>150% OT multiplier</label><input id="mult150" type="number" step="0.01" value="1.50"></div>
     <div><label>දිනකට සාමාන්‍ය පැය</label><input id="dailyHours" type="number" step="0.25" value="7"></div>
+    <div><label>Income Tax / מס הכנסה</label><input id="taxDed" type="number" step="0.01" value="0"></div>
+    <div><label>National Insurance / ביטוח לאומי</label><input id="insuranceDed" type="number" step="0.01" value="0"></div>
+    <div><label>Pension / פנסיה</label><input id="pensionDed" type="number" step="0.01" value="0"></div>
+    <div><label>Other Deductions</label><input id="otherDed" type="number" step="0.01" value="0"></div>
+    <div><label>Opening Balance (signed)</label><input id="openingBalance" type="number" step="0.01" value="0"></div>
   </div>
   <div class="note">
     මේ default values 2026/06–08 salary sheets තුනේ පෙනෙන අගයන් අනුව සකස් කරලා තියෙනවා:
     base 6,443.85, monthly standard 182h, hourly ≈ 35.41, 125%=44.26, 150%=53.11.
     Saturday/weekly-rest day එකේ පැය 150% ලෙස default කර ඇත. මෙය payroll rule එකක් ලෙස settings වලින් පසුව වෙනස් කළ හැක.
     <br><br>
-    <b>වැදගත්:</b> මෙය attendance/gross-salary calculator එකක්. Tax, pension, insurance වැනි payroll deductions වෙනම rules ලෙස add කළ යුතුයි.
+    <b>Payroll:</b> Gross එකෙන් deductions මුලින්ම අඩු කරලා <b>After Deductions</b> ගණනය කරයි. Opening Balance එක + / − දෙකම දාන්න පුළුවන්; සෘන ශේෂයක් තිබුණත් calculator එක continue කරයි. Salary-sheet එකේ exact deduction amounts දාන්න Settings වල fields භාවිතා කරන්න.
   </div>
 </div>
 </div>
@@ -137,6 +188,7 @@ th{color:var(--muted);font-weight:600}
 <script>
 const KEY='salary_clock_v1';
 let data=JSON.parse(localStorage.getItem(KEY)||'{"records":{},"settings":{}}');
+const saved=data.settings||{};
 
 const el=id=>document.getElementById(id);
 function settings(){
@@ -146,17 +198,15 @@ function settings(){
     breakHours:+el('breakHours').value||0.5,
     mult125:+el('mult125').value||1.25,
     mult150:+el('mult150').value||1.5,
-    dailyHours:+el('dailyHours').value||7
+    dailyHours:+el('dailyHours').value||7,
+    taxDed:+el('taxDed').value||0, insuranceDed:+el('insuranceDed').value||0, pensionDed:+el('pensionDed').value||0, otherDed:+el('otherDed').value||0, openingBalance:+el('openingBalance').value||0
   };
 }
 function save(){data.settings=settings();localStorage.setItem(KEY,JSON.stringify(data))}
 function pad(n){return String(n).padStart(2,'0')}
 function key(d){return d.toISOString().slice(0,10)}
-function localNow(){
-  const d=new Date(); return d;
-}
-function hm(d){return pad(d.getHours())+':'+pad(d.getMinutes())}
-function todayKey(){let d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function israelParts(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date()); const o={};p.forEach(x=>o[x.type]=x.value);return o}
+function todayKey(){const p=israelParts();return `${p.year}-${p.month}-${p.day}`}
 function hoursBetween(a,b){return Math.max(0,(new Date(b)-new Date(a))/3600000)}
 function calc(r){
   const s=settings();
@@ -178,19 +228,82 @@ function calc(r){
   const pay=s.base/s.stdHours*regular + rate*s.mult125*ot125 + rate*s.mult150*ot150;
   return {raw,paid,regular,ot125,ot150,pay};
 }
+let liveTimer=null;
+
 function clockIn(){
   const k=todayKey();
-  if(data.records[k]?.in) return;
+  const r=data.records[k];
+
+  // If today's record is a stale completed test record, allow a fresh IN.
+  if(r?.in && r?.out){
+    const outMs=new Date(r.out).getTime();
+    if(outMs > Date.now()){
+      return alert('අද දැනටමත් IN වෙලා තියෙනවා. Future OUT එක clear කරන්න.');
+    }
+    delete data.records[k];
+  } else if(r?.in && !r?.out){
+    return alert('අද IN already තියෙනවා.');
+  }
+
   data.records[k]={in:new Date().toISOString(),out:null};
-  save();render();
+  save();
+  render();
+  startLiveTimer();
 }
+
 function clockOut(){
   const k=todayKey();
-  if(!data.records[k]?.in) return alert('මුලින් IN කරන්න.');
-  if(data.records[k].out) return;
-  data.records[k].out=new Date().toISOString();
-  save();render();
+  const r=data.records[k];
+  if(!r?.in) return alert('මුලින් IN කරන්න.');
+
+  // If a bad/future OUT exists, don't let it block a real OUT.
+  if(r.out && new Date(r.out).getTime() > Date.now()){
+    return alert('Future OUT එක දැනට තියෙනවා. Edit කරලා හරි Reset කරලා හරි නැවත OUT කරන්න.');
+  }
+
+  r.out=new Date().toISOString();
+  data.records[k]=r;
+  save();
+  stopLiveTimer();
+  render();
 }
+
+function startLiveTimer(){
+  if(!liveTimer) liveTimer=setInterval(updateLiveTimer,1000);
+  updateLiveTimer();
+}
+
+function stopLiveTimer(){
+  if(liveTimer){clearInterval(liveTimer);liveTimer=null;}
+}
+
+function updateLiveTimer(){
+  const box=el('liveTimer');
+  if(!box) return;
+  const r=data.records[todayKey()];
+  if(!r?.in || r?.out){
+    box.textContent='00:00:00';
+    return;
+  }
+  const ms=Math.max(0,Date.now()-new Date(r.in).getTime());
+  const total=Math.floor(ms/1000);
+  const hh=Math.floor(total/3600);
+  const mm=Math.floor((total%3600)/60);
+  const ss=total%60;
+  box.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);
+}
+
+function resetToday(){
+  const k=todayKey();
+  if(!data.records[k]) return alert('අද record එකක් නැහැ.');
+  if(confirm('අද IN / OUT record එක Reset කරන්නද?')){
+    delete data.records[k];
+    save();
+    stopLiveTimer();
+    render();
+  }
+}
+
 function fmt(n){return (n||0).toFixed(2)}
 function money(n){return (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
 function render(){
@@ -198,8 +311,8 @@ function render(){
   el('baseOut').textContent=money(s.base);
   el('rateOut').textContent=money(s.base/s.stdHours);
   const now=new Date();
-  el('clock').textContent=now.toLocaleTimeString('en-GB');
-  el('today').textContent=now.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  el('clock').textContent=now.toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem'});
+  el('today').textContent=now.toLocaleDateString('en-GB',{timeZone:'Asia/Jerusalem',weekday:'long',year:'numeric',month:'long',day:'numeric'});
   const mp=el('monthPicker');
   if(!mp.value) mp.value=now.getFullYear()+'-'+pad(now.getMonth()+1);
   const month=mp.value;
@@ -212,8 +325,8 @@ function render(){
     const day=d.toLocaleDateString('en-US',{weekday:'short'});
     rows.push(`<tr>
       <td>${k}</td><td>${day}${d.getDay()===6?' • Rest day':''}</td>
-      <td>${r.in?new Date(r.in).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—'}</td>
-      <td>${r.out?new Date(r.out).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'—'}</td>
+      <td>${r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'—'}</td>
+      <td>${r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'—'}</td>
       <td>${r.out?fmt(s.breakHours)+' h':'—'}</td>
       <td>${fmt(c.paid)}</td><td>${fmt(c.regular)}</td><td>${fmt(c.ot125)}</td><td>${fmt(c.ot150)}</td><td>${money(c.pay)}</td>
       <td><button class="btn" onclick="editManual('${k}')">Edit</button></td>
@@ -226,16 +339,45 @@ function render(){
   el('regularOut').textContent=fmt(total.regular);
   el('pay125').textContent=money(total.ot125*(s.base/s.stdHours)*s.mult125);
   el('pay150').textContent=money(total.ot150*(s.base/s.stdHours)*s.mult150);
-  el('gross').textContent=money(s.base + total.ot125*(s.base/s.stdHours)*s.mult125 + total.ot150*(s.base/s.stdHours)*s.mult150);
-  el('salary').textContent=money(s.base + total.ot125*(s.base/s.stdHours)*s.mult125 + total.ot150*(s.base/s.stdHours)*s.mult150);
+  const gross=s.base + total.ot125*(s.base/s.stdHours)*s.mult125 + total.ot150*(s.base/s.stdHours)*s.mult150;
+  const ded=s.taxDed+s.insuranceDed+s.pensionDed+s.otherDed;
+  const afterDed=gross-ded;
+  const closing=afterDed+s.openingBalance;
+  el('gross').textContent=money(gross);
+  el('salary').textContent=money(closing);
+  el('dedTotal').textContent=money(ded);
+  el('afterDed').textContent=money(afterDed);
+  el('openingOut').textContent=(s.openingBalance<0?'−':'')+money(Math.abs(s.openingBalance));
+  el('closing').textContent=(closing<0?'−':'')+money(Math.abs(closing));
   const r=data.records[todayKey()];
+  let elapsed=0;
+  if(r?.in){ elapsed=Math.max(0,(new Date(r.out||new Date())-new Date(r.in))/1000); }
+  const eh=Math.floor(elapsed/3600), em=Math.floor((elapsed%3600)/60), es=Math.floor(elapsed%60);
+  el('elapsed').textContent=`${pad(eh)}:${pad(em)}:${pad(es)}`;
   el('inBtn').disabled=!!r?.in;
   el('outBtn').disabled=!r?.in||!!r?.out;
-  if(r?.in&&!r?.out){el('dot').className='dot on';el('statusText').textContent='දැන් වැඩ කරනවා — IN '+new Date(r.in).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
-  else if(r?.out){el('dot').className='dot';el('statusText').textContent='අද OUT කරලා තියෙනවා — '+new Date(r.out).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+  if(r?.in&&!r?.out){el('dot').className='dot on';el('statusText').textContent='දැන් වැඩ කරනවා — IN '+new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}
+  else if(r?.out){el('dot').className='dot';el('statusText').textContent='අද OUT කරලා තියෙනවා — '+new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}
   else {el('dot').className='dot';el('statusText').textContent='අද තවම IN කරලා නැහැ.';}
-}
+  // Robust iPhone button state: future/stale OUT records must not lock the buttons.
+  const todayRec=data.records[todayKey()];
+  const inBtn=el('inBtn'), outBtn=el('outBtn');
+  const hasIn=!!todayRec?.in, hasOut=!!todayRec?.out;
+  const outMs=hasOut?new Date(todayRec.out).getTime():0;
+  const outIsFuture=hasOut && outMs>Date.now();
+  const working=hasIn && (!hasOut || outIsFuture);
 
+  inBtn.disabled=working;
+  outBtn.disabled=!hasIn || (hasOut && !outIsFuture);
+
+  if(working){
+    startLiveTimer();
+  }else{
+    stopLiveTimer();
+    updateLiveTimer();
+  }
+
+}
 function localIsraelDateTime(dateStr,timeStr){
   const [y,mo,da]=dateStr.split('-').map(Number);
   const [hh,mi]=timeStr.split(':').map(Number);
@@ -276,7 +418,7 @@ function exportCSV(){
   let lines=[['Date','Day','IN','OUT','BreakHours','PaidHours','Regular','OT125','OT150','DayPay'].join(',')];
   Object.entries(data.records).filter(([k])=>k.startsWith(mp+'-')).sort().forEach(([k,r])=>{
     const c=calc(r);let d=new Date(k+'T00:00:00');
-    lines.push([k,d.toLocaleDateString('en-US',{weekday:'short'}),r.in?new Date(r.in).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'',r.out?new Date(r.out).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'',r.out?s.breakHours:'',fmt(c.paid),fmt(c.regular),fmt(c.ot125),fmt(c.ot150),fmt(c.pay)].join(','));
+    lines.push([k,d.toLocaleDateString('en-US',{weekday:'short'}),r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?s.breakHours:'',fmt(c.paid),fmt(c.regular),fmt(c.ot125),fmt(c.ot150),fmt(c.pay)].join(','));
   });
   const blob=new Blob([lines.join('\\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='salary_'+mp+'.csv';a.click();
@@ -284,9 +426,13 @@ function exportCSV(){
 function clearAll(){
   if(confirm('Attendance data සියල්ල මකන්නද?')){data.records={};save();render();}
 }
-['base','stdHours','breakHours','mult125','mult150','dailyHours'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
+['base','stdHours','breakHours','mult125','mult150','dailyHours','taxDed','insuranceDed','pensionDed','otherDed','openingBalance'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
+['base','stdHours','breakHours','mult125','mult150','dailyHours','taxDed','insuranceDed','pensionDed','otherDed','openingBalance'].forEach(id=>{if(saved[id]!==undefined) el(id).value=saved[id]});
 setInterval(render,1000);
 render();
+if(data.records[todayKey()]?.in && !data.records[todayKey()]?.out) startLiveTimer();
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();updateLiveTimer();}});
+window.addEventListener('pageshow',()=>{render();updateLiveTimer();});
 </script>
 </body>
 </html>
