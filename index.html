@@ -37,7 +37,7 @@ table{width:100%;border-collapse:collapse;min-width:820px}
 th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}
 th{color:var(--muted);font-weight:600}
 .good{color:var(--green)}.warn{color:var(--amber)}.bad{color:#ff7080}
-.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.balanceBox{border:1px solid var(--red);background:var(--cardGlow)}
+.summary{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.accrued{border:1px solid var(--green);background:rgba(33,199,122,.08)}.balanceBox{border:1px solid var(--red);background:var(--cardGlow)}
 .summary .mini{background:var(--panel2);border-radius:12px;padding:12px}
 .mini b{display:block;font-size:18px;margin-top:4px}
 .settings{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
@@ -57,35 +57,8 @@ th{color:var(--muted);font-weight:600}
 }
 @media(max-width:450px){.settings{grid-template-columns:1fr}.actions{gap:8px}.action{font-size:17px;padding:18px 5px}.actions{grid-template-columns:1fr 1fr}.table-wrap{margin:0 -4px}.note{font-size:11px}}
 
-</style>
 
-<style>
-.liveTimerCard{
-  margin:10px 0 14px;
-  padding:16px;
-  border:1px solid #2c3746;
-  border-radius:18px;
-  background:linear-gradient(180deg,#151b24,#10151c);
-  text-align:center;
-  box-shadow:0 8px 24px #0004;
-}
-.liveLabel{font-size:12px;color:#aab4c2;margin-bottom:4px}
-#liveTimer{
-  font-size:42px;
-  line-height:1.05;
-  font-weight:850;
-  letter-spacing:2px;
-  font-variant-numeric:tabular-nums;
-  color:#f7f9fb;
-}
-.liveSub{font-size:10px;color:#778394;margin-top:6px}
-.action:disabled{opacity:.42!important;filter:none;cursor:not-allowed}
-@media(max-width:600px){
-  .liveTimerCard{padding:17px;margin:10px 0}
-  #liveTimer{font-size:40px}
-  .action{min-height:70px;border-radius:18px;touch-action:manipulation}
-  button,input,select{min-height:44px}
-}
+.negative-balance{color:#ff5c70 !important;}
 </style>
 </head>
 <body>
@@ -99,10 +72,24 @@ th{color:var(--muted);font-weight:600}
 </header>
 
 <div class="cards">
-  <div class="card"><div class="label">මෙම මාසයේ වැඩ කළ පැය</div><div class="value" id="mHours">0.00</div></div>
-  <div class="card"><div class="label">125% OT පැය</div><div class="value" id="ot125">0.00</div></div>
-  <div class="card"><div class="label">150% OT පැය</div><div class="value" id="ot150">0.00</div></div>
-  <div class="card"><div class="label">ඇස්තමේන්තු වැටුප</div><div class="value" id="salary">0.00</div></div>
+  <div class="card"><div class="label">වැඩ කළ දින</div><div class="value" id="workDays">0</div></div>
+  <div class="card"><div class="label">දිනකට Basic (÷ 26)</div><div class="value" id="dailyBase">247.84</div></div>
+  <div class="card"><div class="label">මේ මාසයේ වැඩ කළ පැය</div><div class="value" id="mHours">0.00</div></div>
+  <div class="card"><div class="label">දැනට උපයා ඇති ශේෂය</div><div class="value" id="salary">0.00</div></div>
+</div>
+
+<div class="panel accrued">
+  <h2>💰 මේ වෙද්දි උපයා ඇති වැටුප</h2>
+  <div class="summary">
+    <div class="mini"><span class="label">Basic / day</span><b id="accruedBasic">0.00</b></div>
+    <div class="mini"><span class="label">Travel / day</span><b id="accruedTravel">0.00</b></div>
+    <div class="mini"><span class="label">OT 125%</span><b id="accrued125">0.00</b></div>
+    <div class="mini"><span class="label">OT 150%</span><b id="accrued150">0.00</b></div>
+    <div class="mini"><span class="label">Gross earned</span><b id="accruedGross">0.00</b></div>
+    <div class="mini"><span class="label">Full Monthly Deductions</span><b id="accruedDed">0.00</b></div>
+    <div class="mini balanceBox"><span class="label">දැනට උපයා ඇති ශේෂය</span><b id="accruedNet">−₪0.00</b><small>Gross Earned − Full Monthly Deductions (Rent is charged from month start)</small></div>
+  </div>
+  <div class="note">Basic Salary 6,443.85 එක මුළු මාසයටම එකවර add කරන්නේ නැහැ. වැඩ කළ සම්පූර්ණ දින ගණන × (6,443.85 ÷ 26) ලෙස basic earned ගණනය කරයි. Monthly deductions සම්පූර්ණයෙන්ම මුලින්ම අඩු කරයි; ඒවා වැඩ කළ දින ගණන අනුව prorate කරන්නේ නැහැ.</div>
 </div>
 
 <div class="actions">
@@ -110,26 +97,22 @@ th{color:var(--muted);font-weight:600}
   <button class="action out" id="outBtn" onclick="clockOut()">■ OUT — වැඩ අවසන්</button>
 </div>
 
-<div class="status"><span class="dot" id="dot"></span><span id="statusText">අද තවම IN කරලා නැහැ.</span><div id="elapsed" style="font-size:28px;font-weight:800;margin-top:7px;letter-spacing:1px">00:00:00</div>
-<div class="liveTimerCard">
-  <div class="liveLabel">⏱️ අද වැඩ කළ කාලය</div>
-  <div id="liveTimer">00:00:00</div>
-  <div class="liveSub">IN කළ වෙලාවේ සිට live count වේ • 🇮🇱 Israel Time</div>
-</div><div style="font-size:11px;color:var(--muted)">වැඩ කළ ගතවූ කාලය • Israel Time</div></div>
+<div class="status"><span class="dot" id="dot"></span><span id="statusText">අද තවම IN කරලා නැහැ.</span><div id="elapsed" style="font-size:28px;font-weight:800;margin-top:7px;letter-spacing:1px">00:00:00</div><div style="font-size:11px;color:var(--muted)">වැඩ කළ ගතවූ කාලය • Israel Time</div></div>
 
 <div class="panel">
   <h2>මාසික සාරාංශය</h2>
   <div class="summary">
     <div class="mini"><span class="label">Base Salary</span><b id="baseOut">6,443.85</b></div>
     <div class="mini"><span class="label">Hourly Rate</span><b id="rateOut">35.41</b></div>
+    <div class="mini"><span class="label">Travel / נסיעות</span><b id="travelOut">139.00</b></div>
     <div class="mini"><span class="label">සාමාන්‍ය පැය</span><b id="regularOut">0.00</b></div>
     <div class="mini"><span class="label">125% ගෙවීම</span><b id="pay125">0.00</b></div>
     <div class="mini"><span class="label">150% ගෙවීම</span><b id="pay150">0.00</b></div>
-    <div class="mini"><span class="label">Gross Estimate</span><b id="gross">6,443.85</b></div>
-    <div class="mini"><span class="label">Deductions</span><b id="dedTotal">0.00</b></div>
-    <div class="mini"><span class="label">After Deductions</span><b id="afterDed">6,443.85</b></div>
+    <div class="mini"><span class="label">Gross earned</span><b id="gross">0.00</b></div>
+    <div class="mini"><span class="label">Monthly Deductions (Full)</span><b id="dedTotal">0.00</b></div>
+    <div class="mini"><span class="label">After Deductions</span><b id="afterDed">0.00</b></div>
     <div class="mini balanceBox"><span class="label">Opening Balance</span><b id="openingOut">0.00</b></div>
-    <div class="mini balanceBox"><span class="label">Closing Balance</span><b id="closing">6,443.85</b></div>
+    <div class="mini balanceBox"><span class="label">Closing Balance</span><b id="closing">0.00</b></div>
   </div>
 </div>
 
@@ -138,6 +121,7 @@ th{color:var(--muted);font-weight:600}
   <div class="toolbar">
     <input type="month" id="monthPicker" onchange="render()">
     <button class="btn" onclick="exportCSV()">CSV Export</button>
+    <button class="btn danger" onclick="clearMonth()">මෙම මාසයේ data මකන්න</button>
     <button class="btn danger" onclick="clearAll()">සියලු data මකන්න</button>
   </div>
   <div class="table-wrap">
@@ -161,6 +145,16 @@ th{color:var(--muted);font-weight:600}
 </div>
 
 <div class="panel">
+  <h2>📋 Salary Sheet Check</h2>
+  <div class="note" style="font-size:13px">
+    June 2026: 125% OT <b>31.18h</b> • 150% OT <b>24.57h</b> • Gross ≈ <b>9,268.00</b><br>
+    July 2026: 125% OT <b>31.88h</b> • 150% OT <b>32.10h</b> • Gross ≈ <b>9,699.00</b><br>
+    August 2026: 125% OT <b>30.98h</b> • 150% OT <b>24.00h</b> • Gross ≈ <b>9,229.00</b><br><br>
+    මේ values reference ලෙස පෙන්වන්නේ actual salary sheets තුනේ figures. September attendance එකෙන් calculator එක නැවත actual records අනුව calculate කරයි.
+  </div>
+</div>
+
+<div class="panel">
   <h2>Salary Settings</h2>
   <div class="settings">
     <div><label>මාසික මූලික වැටුප</label><input id="base" type="number" step="0.01" value="6443.85"></div>
@@ -168,19 +162,23 @@ th{color:var(--muted);font-weight:600}
     <div><label>කෑම විවේකය (පැය)</label><input id="breakHours" type="number" step="0.05" value="0.50"></div>
     <div><label>125% OT multiplier</label><input id="mult125" type="number" step="0.01" value="1.25"></div>
     <div><label>150% OT multiplier</label><input id="mult150" type="number" step="0.01" value="1.50"></div>
-    <div><label>දිනකට සාමාන්‍ය පැය</label><input id="dailyHours" type="number" step="0.25" value="7"></div>
+    <div><label>දිනකට සාමාන්‍ය පැය (Salary Sheet)</label><input id="dailyHours" type="number" step="0.25" value="7"></div>
+    <div><label>Basic Salary බෙදන දින (26)</label><input id="salaryDays" type="number" step="1" value="26"></div>
+    <div><label>Travel / נסיעות (sheet)</label><input id="travelAllowance" type="number" step="0.01" value="139"></div>
     <div><label>Income Tax / מס הכנסה</label><input id="taxDed" type="number" step="0.01" value="0"></div>
     <div><label>National Insurance / ביטוח לאומי</label><input id="insuranceDed" type="number" step="0.01" value="0"></div>
     <div><label>Pension / פנסיה</label><input id="pensionDed" type="number" step="0.01" value="0"></div>
+    <div><label>🏠 Rent / Accommodation</label><input id="rentDed" type="number" step="0.01" value="800"></div>
     <div><label>Other Deductions</label><input id="otherDed" type="number" step="0.01" value="0"></div>
     <div><label>Opening Balance (signed)</label><input id="openingBalance" type="number" step="0.01" value="0"></div>
   </div>
   <div class="note">
-    මේ default values 2026/06–08 salary sheets තුනේ පෙනෙන අගයන් අනුව සකස් කරලා තියෙනවා:
-    base 6,443.85, monthly standard 182h, hourly ≈ 35.41, 125%=44.26, 150%=53.11.
-    Saturday/weekly-rest day එකේ පැය 150% ලෙස default කර ඇත. මෙය payroll rule එකක් ලෙස settings වලින් පසුව වෙනස් කළ හැක.
+    <b>Salary-sheet match (2026/06–08):</b> Base 6,443.85 • Standard 182h • Hourly 35.41 • 125% = 44.26 • 150% = 53.11 • Travel 139.00.
+    <br>Weekday: 7 paid hours regular; after that first 2h = 125%, remaining = 150%. Saturday/rest day = 150%. Every worked day deducts 0.50h meal break.
     <br><br>
-    <b>Payroll:</b> Gross එකෙන් deductions මුලින්ම අඩු කරලා <b>After Deductions</b> ගණනය කරයි. Opening Balance එක + / − දෙකම දාන්න පුළුවන්; සෘන ශේෂයක් තිබුණත් calculator එක continue කරයි. Salary-sheet එකේ exact deduction amounts දාන්න Settings වල fields භාවිතා කරන්න.
+    <b>වැදගත්:</b> Regular 7h නැවත salary එකට add කරන්නේ නැහැ — monthly Base Salary 6,443.85 එක regular salary එක cover කරනවා. Gross earned = (worked days × Basic/26) + (worked days × Travel/26) + OT. Full monthly Basic එක එකවර add කරන්නේ නැහැ. Monthly deductions (උදා: Rent ₪800) වැඩ කළ දවස් ගණනට බෙදන්නේ නැතිව මාසේ මුලින්ම සම්පූර්ණයෙන් අඩු කරයි. ඒ නිසා වැඩ කරලා කිසිම මුදලක් උපයා නැති වෙලාවක balance එක Rent එක නිසා −₪800.00 වගේ negative වෙන්න පුළුවන්.
+    <br><br>
+    <b>Payroll:</b> Rent, tax, insurance, pension සහ අනෙකුත් monthly deductions <b>මුලින්ම සම්පූර්ණයෙන්ම අඩු කරයි</b> — worked days අනුව prorate කරන්නේ නැහැ. ඒ නිසා මාසේ මුලදී Gross Earned එක deductions වලට වඩා අඩු නම් <b>Net / Balance එක negative (−)</b> වෙන්න පුළුවන්. Opening Balance එක + / − දෙකම දාන්න පුළුවන්.
   </div>
 </div>
 </div>
@@ -199,7 +197,9 @@ function settings(){
     mult125:+el('mult125').value||1.25,
     mult150:+el('mult150').value||1.5,
     dailyHours:+el('dailyHours').value||7,
-    taxDed:+el('taxDed').value||0, insuranceDed:+el('insuranceDed').value||0, pensionDed:+el('pensionDed').value||0, otherDed:+el('otherDed').value||0, openingBalance:+el('openingBalance').value||0
+    salaryDays:+el('salaryDays').value||26,
+    travelAllowance:+el('travelAllowance').value||139,
+    taxDed:+el('taxDed').value||0, insuranceDed:+el('insuranceDed').value||0, pensionDed:+el('pensionDed').value||0, rentDed:+el('rentDed').value||0, otherDed:+el('otherDed').value||0, openingBalance:+el('openingBalance').value||0
   };
 }
 function save(){data.settings=settings();localStorage.setItem(KEY,JSON.stringify(data))}
@@ -208,104 +208,49 @@ function key(d){return d.toISOString().slice(0,10)}
 function israelParts(){const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date()); const o={};p.forEach(x=>o[x.type]=x.value);return o}
 function todayKey(){const p=israelParts();return `${p.year}-${p.month}-${p.day}`}
 function hoursBetween(a,b){return Math.max(0,(new Date(b)-new Date(a))/3600000)}
+function israelWeekday(dateValue){
+  const wd=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Jerusalem',weekday:'short'}).format(new Date(dateValue));
+  return wd;
+}
+function isIsraelSaturday(dateValue){ return israelWeekday(dateValue)==='Sat'; }
 function calc(r){
   const s=settings();
-  if(!r.in||!r.out) return {paid:0,regular:0,ot125:0,ot150:0,pay:0};
-  let raw=hoursBetween(r.in,r.out);
-  let paid=Math.max(0,raw-s.breakHours);
-  let day=new Date(r.in);
-  let sat=day.getDay()===6;
+  if(!r.in||!r.out) return {raw:0,paid:0,regular:0,ot125:0,ot150:0,otPay:0,pay:0};
+  const raw=hoursBetween(r.in,r.out);
+  const paid=Math.max(0,raw-s.breakHours);
   let regular=0,ot125=0,ot150=0;
-  if(sat){
+  if(isIsraelSaturday(r.in)){
     ot150=paid;
   }else{
     regular=Math.min(paid,s.dailyHours);
-    let ot=Math.max(0,paid-s.dailyHours);
+    const ot=Math.max(0,paid-s.dailyHours);
     ot125=Math.min(ot,2);
     ot150=Math.max(0,ot-2);
   }
   const rate=s.base/s.stdHours;
-  const pay=s.base/s.stdHours*regular + rate*s.mult125*ot125 + rate*s.mult150*ot150;
-  return {raw,paid,regular,ot125,ot150,pay};
+  const otPay=rate*s.mult125*ot125 + rate*s.mult150*ot150;
+  // Base salary already pays the regular monthly hours. Do NOT add regular hours again.
+  return {raw,paid,regular,ot125,ot150,otPay,pay:otPay};
 }
-let liveTimer=null;
-
 function clockIn(){
   const k=todayKey();
-  const r=data.records[k];
-
-  // If today's record is a stale completed test record, allow a fresh IN.
-  if(r?.in && r?.out){
-    const outMs=new Date(r.out).getTime();
-    if(outMs > Date.now()){
-      return alert('අද දැනටමත් IN වෙලා තියෙනවා. Future OUT එක clear කරන්න.');
-    }
-    delete data.records[k];
-  } else if(r?.in && !r?.out){
-    return alert('අද IN already තියෙනවා.');
-  }
-
+  if(data.records[k]?.in) return;
   data.records[k]={in:new Date().toISOString(),out:null};
-  save();
-  render();
-  startLiveTimer();
+  save();render();
 }
-
 function clockOut(){
   const k=todayKey();
-  const r=data.records[k];
-  if(!r?.in) return alert('මුලින් IN කරන්න.');
-
-  // If a bad/future OUT exists, don't let it block a real OUT.
-  if(r.out && new Date(r.out).getTime() > Date.now()){
-    return alert('Future OUT එක දැනට තියෙනවා. Edit කරලා හරි Reset කරලා හරි නැවත OUT කරන්න.');
-  }
-
-  r.out=new Date().toISOString();
-  data.records[k]=r;
-  save();
-  stopLiveTimer();
-  render();
+  if(!data.records[k]?.in) return alert('මුලින් IN කරන්න.');
+  if(data.records[k].out) return;
+  data.records[k].out=new Date().toISOString();
+  save();render();
 }
-
-function startLiveTimer(){
-  if(!liveTimer) liveTimer=setInterval(updateLiveTimer,1000);
-  updateLiveTimer();
-}
-
-function stopLiveTimer(){
-  if(liveTimer){clearInterval(liveTimer);liveTimer=null;}
-}
-
-function updateLiveTimer(){
-  const box=el('liveTimer');
-  if(!box) return;
-  const r=data.records[todayKey()];
-  if(!r?.in || r?.out){
-    box.textContent='00:00:00';
-    return;
-  }
-  const ms=Math.max(0,Date.now()-new Date(r.in).getTime());
-  const total=Math.floor(ms/1000);
-  const hh=Math.floor(total/3600);
-  const mm=Math.floor((total%3600)/60);
-  const ss=total%60;
-  box.textContent=pad(hh)+':'+pad(mm)+':'+pad(ss);
-}
-
-function resetToday(){
-  const k=todayKey();
-  if(!data.records[k]) return alert('අද record එකක් නැහැ.');
-  if(confirm('අද IN / OUT record එක Reset කරන්නද?')){
-    delete data.records[k];
-    save();
-    stopLiveTimer();
-    render();
-  }
-}
-
 function fmt(n){return (n||0).toFixed(2)}
-function money(n){return (n||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
+function money(n){
+  n=Number(n)||0;
+  const sign=n<0?'−':'';
+  return sign+'₪'+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
 function render(){
   const s=settings();
   el('baseOut').textContent=money(s.base);
@@ -313,18 +258,20 @@ function render(){
   const now=new Date();
   el('clock').textContent=now.toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem'});
   el('today').textContent=now.toLocaleDateString('en-GB',{timeZone:'Asia/Jerusalem',weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const ip=israelParts();
   const mp=el('monthPicker');
-  if(!mp.value) mp.value=now.getFullYear()+'-'+pad(now.getMonth()+1);
+  if(!mp.value) mp.value=ip.year+'-'+ip.month;
+  el('travelOut').textContent=money(s.travelAllowance);
   const month=mp.value;
   el('monthTitle').textContent=month;
-  let total={paid:0,regular:0,ot125:0,ot150:0,pay:0};
+  let total={paid:0,regular:0,ot125:0,ot150:0,pay:0,otPay:0};
   const rows=[];
   Object.entries(data.records).filter(([k])=>k.startsWith(month+'-')).sort().reverse().forEach(([k,r])=>{
     const c=calc(r);Object.keys(total).forEach(x=>total[x]+=c[x]||0);
     const d=new Date(k+'T00:00:00');
-    const day=d.toLocaleDateString('en-US',{weekday:'short'});
+    const day=israelWeekday(r.in||d);
     rows.push(`<tr>
-      <td>${k}</td><td>${day}${d.getDay()===6?' • Rest day':''}</td>
+      <td>${k}</td><td>${day}${day==='Sat'?' • Rest day':''}</td>
       <td>${r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'—'}</td>
       <td>${r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'—'}</td>
       <td>${r.out?fmt(s.breakHours)+' h':'—'}</td>
@@ -333,18 +280,33 @@ function render(){
     </tr>`);
   });
   el('rows').innerHTML=rows.join('')||'<tr><td colspan="11">මෙම මාසයට attendance records නැහැ.</td></tr>';
-  el('mHours').textContent=fmt(total.paid);
-  el('ot125').textContent=fmt(total.ot125);
-  el('ot150').textContent=fmt(total.ot150);
-  el('regularOut').textContent=fmt(total.regular);
-  el('pay125').textContent=money(total.ot125*(s.base/s.stdHours)*s.mult125);
-  el('pay150').textContent=money(total.ot150*(s.base/s.stdHours)*s.mult150);
-  const gross=s.base + total.ot125*(s.base/s.stdHours)*s.mult125 + total.ot150*(s.base/s.stdHours)*s.mult150;
-  const ded=s.taxDed+s.insuranceDed+s.pensionDed+s.otherDed;
+  const workDays=Object.entries(data.records).filter(([k,r])=>k.startsWith(month+'-') && r.in && r.out).length;
+  const dailyBase=s.base/s.salaryDays;
+  const dailyTravel=s.travelAllowance/s.salaryDays;
+  const basicEarned=workDays*dailyBase;
+  const travelEarned=workDays*dailyTravel;
+  const ot125Pay=total.ot125*(s.base/s.stdHours)*s.mult125;
+  const ot150Pay=total.ot150*(s.base/s.stdHours)*s.mult150;
+  const otPay=ot125Pay+ot150Pay;
+  const gross=basicEarned+travelEarned+otPay;
+  const monthlyDed=s.taxDed+s.insuranceDed+s.pensionDed+s.rentDed+s.otherDed;
+  // IMPORTANT: monthly deductions are charged in full first. They are NOT prorated by worked days.
+  const ded=monthlyDed;
   const afterDed=gross-ded;
   const closing=afterDed+s.openingBalance;
+  el('workDays').textContent=workDays;
+  el('dailyBase').textContent=money(dailyBase);
+  el('accruedBasic').textContent=money(basicEarned);
+  el('accruedTravel').textContent=money(travelEarned);
+  el('accrued125').textContent=money(ot125Pay);
+  el('accrued150').textContent=money(ot150Pay);
+  el('accruedGross').textContent=money(gross);
+  el('accruedDed').textContent=money(ded);
+  el('accruedNet').textContent=money(afterDed);
   el('gross').textContent=money(gross);
-  el('salary').textContent=money(closing);
+  el('salary').textContent=money(afterDed);
+  // Current earned balance = earned-to-date minus full monthly deductions. Opening balance is kept separate.
+  el('salary').classList.toggle('negative-balance', afterDed < 0);
   el('dedTotal').textContent=money(ded);
   el('afterDed').textContent=money(afterDed);
   el('openingOut').textContent=(s.openingBalance<0?'−':'')+money(Math.abs(s.openingBalance));
@@ -359,25 +321,8 @@ function render(){
   if(r?.in&&!r?.out){el('dot').className='dot on';el('statusText').textContent='දැන් වැඩ කරනවා — IN '+new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}
   else if(r?.out){el('dot').className='dot';el('statusText').textContent='අද OUT කරලා තියෙනවා — '+new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}
   else {el('dot').className='dot';el('statusText').textContent='අද තවම IN කරලා නැහැ.';}
-  // Robust iPhone button state: future/stale OUT records must not lock the buttons.
-  const todayRec=data.records[todayKey()];
-  const inBtn=el('inBtn'), outBtn=el('outBtn');
-  const hasIn=!!todayRec?.in, hasOut=!!todayRec?.out;
-  const outMs=hasOut?new Date(todayRec.out).getTime():0;
-  const outIsFuture=hasOut && outMs>Date.now();
-  const working=hasIn && (!hasOut || outIsFuture);
-
-  inBtn.disabled=working;
-  outBtn.disabled=!hasIn || (hasOut && !outIsFuture);
-
-  if(working){
-    startLiveTimer();
-  }else{
-    stopLiveTimer();
-    updateLiveTimer();
-  }
-
 }
+
 function localIsraelDateTime(dateStr,timeStr){
   const [y,mo,da]=dateStr.split('-').map(Number);
   const [hh,mi]=timeStr.split(':').map(Number);
@@ -418,21 +363,29 @@ function exportCSV(){
   let lines=[['Date','Day','IN','OUT','BreakHours','PaidHours','Regular','OT125','OT150','DayPay'].join(',')];
   Object.entries(data.records).filter(([k])=>k.startsWith(mp+'-')).sort().forEach(([k,r])=>{
     const c=calc(r);let d=new Date(k+'T00:00:00');
-    lines.push([k,d.toLocaleDateString('en-US',{weekday:'short'}),r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?s.breakHours:'',fmt(c.paid),fmt(c.regular),fmt(c.ot125),fmt(c.ot150),fmt(c.pay)].join(','));
+    lines.push([k,israelWeekday(r.in||d),r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?s.breakHours:'',fmt(c.paid),fmt(c.regular),fmt(c.ot125),fmt(c.ot150),fmt(c.pay)].join(','));
   });
   const blob=new Blob([lines.join('\\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='salary_'+mp+'.csv';a.click();
 }
+function clearMonth(){
+  const mp=el('monthPicker').value;
+  if(!mp) return;
+  if(confirm(mp+' attendance data සියල්ල මකන්නද?')){
+    Object.keys(data.records).filter(k=>k.startsWith(mp+'-')).forEach(k=>delete data.records[k]);
+    save();render();
+  }
+}
 function clearAll(){
   if(confirm('Attendance data සියල්ල මකන්නද?')){data.records={};save();render();}
 }
-['base','stdHours','breakHours','mult125','mult150','dailyHours','taxDed','insuranceDed','pensionDed','otherDed','openingBalance'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
-['base','stdHours','breakHours','mult125','mult150','dailyHours','taxDed','insuranceDed','pensionDed','otherDed','openingBalance'].forEach(id=>{if(saved[id]!==undefined) el(id).value=saved[id]});
+['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
+['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>{if(saved[id]!==undefined) el(id).value=saved[id]});
+// Rent is a full monthly deduction and is charged from the start of the month.
+// For this setup, default monthly rent is ₪800.
+if((saved.rentDed===undefined || Number(saved.rentDed)===0) && !localStorage.getItem('salary_clock_rent800_initialized')){ el('rentDed').value=800; localStorage.setItem('salary_clock_rent800_initialized','1'); save(); }
 setInterval(render,1000);
 render();
-if(data.records[todayKey()]?.in && !data.records[todayKey()]?.out) startLiveTimer();
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();updateLiveTimer();}});
-window.addEventListener('pageshow',()=>{render();updateLiveTimer();});
 </script>
 </body>
 </html>
