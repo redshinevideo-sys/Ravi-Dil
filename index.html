@@ -295,6 +295,8 @@ function render(){
   const afterDed=gross-ded;
   const closing=afterDed+s.openingBalance;
   el('workDays').textContent=workDays;
+  // Total paid/worked hours for the selected month
+  el('mHours').textContent=fmt(total.paid);
   el('dailyBase').textContent=money(dailyBase);
   el('accruedBasic').textContent=money(basicEarned);
   el('accruedTravel').textContent=money(travelEarned);
@@ -322,6 +324,7 @@ function render(){
   else if(r?.out){el('dot').className='dot';el('statusText').textContent='අද OUT කරලා තියෙනවා — '+new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});}
   else {el('dot').className='dot';el('statusText').textContent='අද තවම IN කරලා නැහැ.';}
 }
+
 
 function localIsraelDateTime(dateStr,timeStr){
   const [y,mo,da]=dateStr.split('-').map(Number);
