@@ -165,9 +165,9 @@ th{color:var(--muted);font-weight:600}
     <div><label>දිනකට සාමාන්‍ය පැය (Salary Sheet)</label><input id="dailyHours" type="number" step="0.25" value="7"></div>
     <div><label>Basic Salary බෙදන දින (26)</label><input id="salaryDays" type="number" step="1" value="26"></div>
     <div><label>Travel / נסיעות (sheet)</label><input id="travelAllowance" type="number" step="0.01" value="139"></div>
-    <div><label>Income Tax / מס הכנסה</label><input id="taxDed" type="number" step="0.01" value="0"></div>
-    <div><label>National Insurance / ביטוח לאומי</label><input id="insuranceDed" type="number" step="0.01" value="0"></div>
-    <div><label>Pension / פנסיה</label><input id="pensionDed" type="number" step="0.01" value="0"></div>
+    <div><label>Income Tax / מס הכנסה</label><input id="taxDed" type="number" step="0.01" value="835"></div>
+    <div><label>National Insurance / ביטוח לאומי</label><input id="insuranceDed" type="number" step="0.01" value="25"></div>
+    <div><label>Pension / פנסיה</label><input id="pensionDed" type="number" step="0.01" value="849"></div>
     <div><label>🏠 Rent / Accommodation</label><input id="rentDed" type="number" step="0.01" value="800"></div>
     <div><label>Other Deductions</label><input id="otherDed" type="number" step="0.01" value="0"></div>
     <div><label>Opening Balance (signed)</label><input id="openingBalance" type="number" step="0.01" value="0"></div>
@@ -384,9 +384,18 @@ function clearAll(){
 }
 ['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
 ['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>{if(saved[id]!==undefined) el(id).value=saved[id]});
-// Rent is a full monthly deduction and is charged from the start of the month.
-// For this setup, default monthly rent is ₪800.
-if((saved.rentDed===undefined || Number(saved.rentDed)===0) && !localStorage.getItem('salary_clock_rent800_initialized')){ el('rentDed').value=800; localStorage.setItem('salary_clock_rent800_initialized','1'); save(); }
+// Payroll deduction defaults from the supplied July 2026 payslip: Tax ₪835 + National Insurance ₪25 + other employee payroll deductions ₪849, plus Rent ₪800.
+// These are charged in full from month start; they are NOT prorated by worked days.
+const DEDUCTION_DEFAULTS_VERSION='2026-09-payroll-2509';
+if(localStorage.getItem('salary_clock_deduction_defaults_version')!==DEDUCTION_DEFAULTS_VERSION){
+  el('taxDed').value=835;
+  el('insuranceDed').value=25;
+  el('pensionDed').value=849;
+  el('rentDed').value=800;
+  el('otherDed').value=0;
+  localStorage.setItem('salary_clock_deduction_defaults_version',DEDUCTION_DEFAULTS_VERSION);
+  save();
+}
 setInterval(render,1000);
 render();
 </script>
