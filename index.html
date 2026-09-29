@@ -105,6 +105,7 @@ th{color:var(--muted);font-weight:600}
     <div class="mini"><span class="label">Base Salary</span><b id="baseOut">6,443.85</b></div>
     <div class="mini"><span class="label">Hourly Rate</span><b id="rateOut">35.41</b></div>
     <div class="mini"><span class="label">Travel / נסיעות</span><b id="travelOut">139.00</b></div>
+    <div class="mini"><span class="label">Saturday Avg / h</span><b id="satRateOut">49.25</b></div>
     <div class="mini"><span class="label">සාමාන්‍ය පැය</span><b id="regularOut">0.00</b></div>
     <div class="mini"><span class="label">125% ගෙවීම</span><b id="pay125">0.00</b></div>
     <div class="mini"><span class="label">150% ගෙවීම</span><b id="pay150">0.00</b></div>
@@ -126,7 +127,7 @@ th{color:var(--muted);font-weight:600}
   </div>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>දිනය</th><th>Day</th><th>IN</th><th>OUT</th><th>Break</th><th>Paid Hours</th><th>Regular</th><th>125%</th><th>150%</th><th>Day Pay</th><th>Action</th></tr></thead>
+    <thead><tr><th>දිනය</th><th>Day</th><th>IN</th><th>OUT</th><th>Break</th><th>Paid Hours</th><th>Regular</th><th>125%</th><th>150%</th><th>Sat Avg</th><th>Day Pay</th><th>Action</th></tr></thead>
     <tbody id="rows"></tbody>
   </table>
   </div>
@@ -165,6 +166,7 @@ th{color:var(--muted);font-weight:600}
     <div><label>දිනකට සාමාන්‍ය පැය (Salary Sheet)</label><input id="dailyHours" type="number" step="0.25" value="7"></div>
     <div><label>Basic Salary බෙදන දින (26)</label><input id="salaryDays" type="number" step="1" value="26"></div>
     <div><label>Travel / נסיעות (sheet)</label><input id="travelAllowance" type="number" step="0.01" value="139"></div>
+    <div><label>Saturday Average Rate / පැය</label><input id="satAvgRate" type="number" step="0.01" value="49.25"></div>
     <div><label>Income Tax / מס הכנסה</label><input id="taxDed" type="number" step="0.01" value="835"></div>
     <div><label>National Insurance / ביטוח לאומי</label><input id="insuranceDed" type="number" step="0.01" value="25"></div>
     <div><label>Pension / פנסיה</label><input id="pensionDed" type="number" step="0.01" value="849"></div>
@@ -174,7 +176,7 @@ th{color:var(--muted);font-weight:600}
   </div>
   <div class="note">
     <b>Salary-sheet match (2026/06–08):</b> Base 6,443.85 • Standard 182h • Hourly 35.41 • 125% = 44.26 • 150% = 53.11 • Travel 139.00.
-    <br>Weekday: 7 paid hours regular; after that first 2h = 125%, remaining = 150%. Saturday/rest day = 150%. Every worked day deducts 0.50h meal break.
+    <br>Weekday: 7 paid hours regular; after that first 2h = 125%, remaining = 150%. Saturday/rest day = average ₪49.25/hour (August payslip-based estimate). Every worked day deducts 0.50h meal break.
     <br><br>
     <b>වැදගත්:</b> Regular 7h නැවත salary එකට add කරන්නේ නැහැ — monthly Base Salary 6,443.85 එක regular salary එක cover කරනවා. Gross earned = (worked days × Basic/26) + (worked days × Travel/26) + OT. Full monthly Basic එක එකවර add කරන්නේ නැහැ. Monthly deductions (උදා: Rent ₪800) වැඩ කළ දවස් ගණනට බෙදන්නේ නැතිව මාසේ මුලින්ම සම්පූර්ණයෙන් අඩු කරයි. ඒ නිසා වැඩ කරලා කිසිම මුදලක් උපයා නැති වෙලාවක balance එක Rent එක නිසා −₪800.00 වගේ negative වෙන්න පුළුවන්.
     <br><br>
@@ -199,6 +201,7 @@ function settings(){
     dailyHours:+el('dailyHours').value||7,
     salaryDays:+el('salaryDays').value||26,
     travelAllowance:+el('travelAllowance').value||139,
+    satAvgRate:+el('satAvgRate').value||49.25,
     taxDed:+el('taxDed').value||0, insuranceDed:+el('insuranceDed').value||0, pensionDed:+el('pensionDed').value||0, rentDed:+el('rentDed').value||0, otherDed:+el('otherDed').value||0, openingBalance:+el('openingBalance').value||0
   };
 }
@@ -218,7 +221,7 @@ function calc(r){
   if(!r.in||!r.out) return {raw:0,paid:0,regular:0,ot125:0,ot150:0,otPay:0,pay:0};
   const raw=hoursBetween(r.in,r.out);
   const paid=Math.max(0,raw-s.breakHours);
-  let regular=0,ot125=0,ot150=0;
+  let regular=0,ot125=0,ot150=0,satHours=0;
   if(isIsraelSaturday(r.in)){
     ot150=paid;
   }else{
@@ -267,9 +270,10 @@ function render(){
   const mp=el('monthPicker');
   if(!mp.value) mp.value=ip.year+'-'+ip.month;
   el('travelOut').textContent=money(s.travelAllowance);
+  el('satRateOut').textContent=money(s.satAvgRate);
   const month=mp.value;
   el('monthTitle').textContent=month;
-  let total={paid:0,regular:0,ot125:0,ot150:0,pay:0,otPay:0,regularPay:0,ot125Pay:0,ot150Pay:0};
+  let total={paid:0,regular:0,ot125:0,ot150:0,satHours:0,pay:0,otPay:0,regularPay:0,ot125Pay:0,ot150Pay:0};
   const rows=[];
   Object.entries(data.records).filter(([k])=>k.startsWith(month+'-')).sort().reverse().forEach(([k,r])=>{
     const c=calc(r);Object.keys(total).forEach(x=>total[x]+=c[x]||0);
@@ -280,11 +284,11 @@ function render(){
       <td>${r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'—'}</td>
       <td>${r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'—'}</td>
       <td>${r.out?fmt(s.breakHours)+' h':'—'}</td>
-      <td>${fmt(c.paid)}</td><td>${fmt(c.regular)}</td><td>${fmt(c.ot125)}</td><td>${fmt(c.ot150)}</td><td>${money(c.pay)}</td>
+      <td>${fmt(c.paid)}</td><td>${fmt(c.regular)}</td><td>${fmt(c.ot125)}</td><td>${fmt(c.ot150)}</td><td>${c.satHours?money(c.satHours*s.satAvgRate):'—'}</td><td>${money(c.pay)}</td>
       <td><button class="btn" onclick="editManual('${k}')">Edit</button></td>
     </tr>`);
   });
-  el('rows').innerHTML=rows.join('')||'<tr><td colspan="11">මෙම මාසයට attendance records නැහැ.</td></tr>';
+  el('rows').innerHTML=rows.join('')||'<tr><td colspan="12">මෙම මාසයට attendance records නැහැ.</td></tr>';
   const workDays=Object.entries(data.records).filter(([k,r])=>k.startsWith(month+'-') && r.in && r.out).length;
   const dailyBase=s.base/s.salaryDays;
   const dailyTravel=s.travelAllowance/s.salaryDays;
@@ -292,7 +296,8 @@ function render(){
   const travelEarned=workDays*dailyTravel;
   const ot125Pay=total.ot125*(s.base/s.stdHours)*s.mult125;
   const ot150Pay=total.ot150*(s.base/s.stdHours)*s.mult150;
-  const otPay=ot125Pay+ot150Pay;
+  const satPay=total.satHours*s.satAvgRate;
+  const otPay=ot125Pay+ot150Pay+satPay;
   const gross=basicEarned+travelEarned+otPay;
   const monthlyDed=s.taxDed+s.insuranceDed+s.pensionDed+s.rentDed+s.otherDed;
   // IMPORTANT: monthly deductions are charged in full first. They are NOT prorated by worked days.
@@ -368,10 +373,10 @@ function editManual(k){
 function exportCSV(){
   const mp=el('monthPicker').value;
   const s=settings();
-  let lines=[['Date','Day','IN','OUT','BreakHours','PaidHours','Regular','OT125','OT150','DayPay'].join(',')];
+  let lines=[['Date','Day','IN','OUT','BreakHours','PaidHours','Regular','OT125','OT150','SaturdayAvgPay','DayPay'].join(',')];
   Object.entries(data.records).filter(([k])=>k.startsWith(mp+'-')).sort().forEach(([k,r])=>{
     const c=calc(r);let d=new Date(k+'T00:00:00');
-    lines.push([k,israelWeekday(r.in||d),r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?s.breakHours:'',fmt(c.paid),fmt(c.regular),fmt(c.ot125),fmt(c.ot150),fmt(c.pay)].join(','));
+    lines.push([k,israelWeekday(r.in||d),r.in?new Date(r.in).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?new Date(r.out).toLocaleTimeString('en-GB',{timeZone:'Asia/Jerusalem',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}):'',r.out?s.breakHours:'',fmt(c.paid),fmt(c.regular),fmt(c.ot125),fmt(c.ot150),fmt(c.satHours*s.satAvgRate),fmt(c.pay)].join(','));
   });
   const blob=new Blob([lines.join('\\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='salary_'+mp+'.csv';a.click();
@@ -387,8 +392,8 @@ function clearMonth(){
 function clearAll(){
   if(confirm('Attendance data සියල්ල මකන්නද?')){data.records={};save();render();}
 }
-['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
-['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>{if(saved[id]!==undefined) el(id).value=saved[id]});
+['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','satAvgRate','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>el(id).addEventListener('input',()=>{save();render()}));
+['base','stdHours','breakHours','mult125','mult150','dailyHours','travelAllowance','satAvgRate','taxDed','insuranceDed','pensionDed','rentDed','otherDed','openingBalance'].forEach(id=>{if(saved[id]!==undefined) el(id).value=saved[id]});
 // Payroll deduction defaults from the supplied July 2026 payslip: Tax ₪835 + National Insurance ₪25 + other employee payroll deductions ₪849, plus Rent ₪800.
 // These are charged in full from month start; they are NOT prorated by worked days.
 const DEDUCTION_DEFAULTS_VERSION='2026-09-payroll-2509';
