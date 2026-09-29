@@ -228,9 +228,14 @@ function calc(r){
     ot150=Math.max(0,ot-2);
   }
   const rate=s.base/s.stdHours;
-  const otPay=rate*s.mult125*ot125 + rate*s.mult150*ot150;
-  // Base salary already pays the regular monthly hours. Do NOT add regular hours again.
-  return {raw,paid,regular,ot125,ot150,otPay,pay:otPay};
+  const regularPay=rate*regular;
+  const ot125Pay=rate*s.mult125*ot125;
+  const ot150Pay=rate*s.mult150*ot150;
+  const otPay=ot125Pay+ot150Pay;
+  // Day Pay shows the actual value of this attendance day: regular pay + OT pay.
+  // Regular pay is still NOT added to monthly gross here because Basic salary is accrued separately by worked days.
+  const dayPay=regularPay+otPay;
+  return {raw,paid,regular,ot125,ot150,regularPay,ot125Pay,ot150Pay,otPay,pay:dayPay};
 }
 function clockIn(){
   const k=todayKey();
@@ -264,7 +269,7 @@ function render(){
   el('travelOut').textContent=money(s.travelAllowance);
   const month=mp.value;
   el('monthTitle').textContent=month;
-  let total={paid:0,regular:0,ot125:0,ot150:0,pay:0,otPay:0};
+  let total={paid:0,regular:0,ot125:0,ot150:0,pay:0,otPay:0,regularPay:0,ot125Pay:0,ot150Pay:0};
   const rows=[];
   Object.entries(data.records).filter(([k])=>k.startsWith(month+'-')).sort().reverse().forEach(([k,r])=>{
     const c=calc(r);Object.keys(total).forEach(x=>total[x]+=c[x]||0);
